@@ -132,10 +132,11 @@ if not df_raw.empty:
         dev = len(df[df["Status"] == "Devolutiva"])
         st.metric("Devolutivas", dev, delta=f"{(dev / len(df) * 100):.1f}%" if len(df) > 0 else "0%")
     with m3:
-        st.metric("Com Fornecedor", len(df[df["Status"].str.contains("Fornecedor", na=False)]))
+        aguardando_fornecedor = len(df[df["Status"].str.strip().str.lower() == "aguardando fornecedor"])
+        st.metric("Aguardando Fornecedor", aguardando_fornecedor)
     with m4:
-        novos = len(df[df["Criacao"] >= pd.Timestamp.now().normalize() - pd.Timedelta(days=7)])
-        st.metric("Novos (7 dias)", novos)
+        aguardando_cliente = len(df[df["Status"].str.strip().str.lower() == "aguardando cliente"])
+        st.metric("Aguardando Cliente", aguardando_cliente)
 
     st.markdown("---")
 
@@ -166,6 +167,23 @@ if not df_raw.empty:
         fig_casas = px.bar(casa_counts, x="Tickets", y="Brand", orientation="h", color_discrete_sequence=["#20435C"])
         fig_casas.update_layout(margin=dict(t=30, b=0, l=0, r=0))
         st.plotly_chart(fig_casas, use_container_width=True)
+
+    st.subheader("Tickets por Data de Criação")
+    trend_df = (
+        df.dropna(subset=["Criacao"])
+        .groupby(df["Criacao"].dt.date)
+        .size()
+        .reset_index(name="Tickets")
+        .rename(columns={"Criacao": "Data"})
+        .sort_values("Data")
+    )
+    if not trend_df.empty:
+        fig_trend = px.line(trend_df, x="Data", y="Tickets", markers=True)
+        fig_trend.update_traces(line_color="#20435C", marker_color="#EA465E")
+        fig_trend.update_layout(margin=dict(t=10, b=0, l=0, r=0), height=300)
+        st.plotly_chart(fig_trend, use_container_width=True)
+    else:
+        st.info("Sem dados de criação válidos para exibir a linha por data.")
 
     # --- TABELA ---
     st.markdown("---")
