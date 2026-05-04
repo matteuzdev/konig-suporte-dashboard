@@ -3,13 +3,8 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 
-# Configuração da Página de Elite - Identidade OFFICECOM
-st.set_page_config(page_title="OFFICECOM | Suporte iGaming Dashboard", layout="wide", initial_sidebar_state="expanded")
-
-# --- PALETA OFFICECOM ---
-# Primária: #EA465E (Vermelho/Rosa)
-# Secundária: #20435C (Azul Marinho)
-# Background: #F4F7F9 (Cinza Claro/Azul)
+# Configuração da Página - Suporte Dashboard
+st.set_page_config(page_title="Suporte Dashboard", layout="wide", initial_sidebar_state="expanded")
 
 # --- SISTEMA DE SEGURANÇA ---
 def check_password():
@@ -20,8 +15,8 @@ def check_password():
 
     cols = st.columns([1, 2, 1])
     with cols[1]:
-        st.markdown("<h1 style='text-align: center; color: #20435C;'>OFFICECOM</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #666;'>Painel de Gestão de Suporte N2</p>", unsafe_allow_html=True)
+        st.markdown("<h1 style='text-align: center; color: #20435C;'>SUPORTE N2</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #666;'>Painel de Gestão de Tickets</p>", unsafe_allow_html=True)
         password = st.text_input("Senha de acesso:", type="password")
         if st.button("ENTRAR NO SISTEMA"):
             if password == "suporten2":
@@ -34,23 +29,18 @@ def check_password():
 if not check_password():
     st.stop()
 
-# --- INÍCIO DO DASHBOARD ---
-
+# --- CONFIGURAÇÕES ---
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1LWuWM2iEPz-3f3qvXaaokiNrnLafjPP43LIAKz5tcoA/export?format=csv&gid=1321610989"
 
-# CSS Personalizado OFFICECOM
+# CSS Customizado (Paleta Officecom preservada)
 st.markdown("""
     <style>
-    /* Estilo Geral */
     .main { background-color: #F4F7F9; }
     .stMetric { background-color: white; padding: 20px; border-radius: 12px; border: 1px solid #E0E4E8; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
     [data-testid="stMetricValue"] { color: #20435C !important; font-weight: bold; }
     [data-testid="stSidebar"] { background-color: #20435C; border-right: 1px solid #1a364a; }
     [data-testid="stSidebar"] * { color: white !important; }
-    
     h1, h2, h3 { color: #20435C !important; font-family: 'Inter', sans-serif; }
-    
-    /* Botão Customizado Officecom */
     .stButton>button { 
         background-color: #EA465E !important; 
         color: white !important; 
@@ -58,18 +48,9 @@ st.markdown("""
         font-weight: bold !important; 
         border: none !important;
         padding: 10px !important;
-        transition: all 0.3s ease;
     }
-    .stButton>button:hover {
-        background-color: #d63f56 !important;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(234, 70, 94, 0.3);
-    }
-    
-    /* Tabela Officecom */
-    table { border-radius: 10px; overflow: hidden; }
-    th { background-color: #20435C !important; color: white !important; text-align: left !important; }
-    td { color: #444 !important; }
+    .stButton>button:hover { background-color: #d63f56 !important; }
+    th { background-color: #20435C !important; color: white !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -87,24 +68,23 @@ def load_data():
 
 # --- SIDEBAR ---
 with st.sidebar:
-    st.markdown("<h2 style='text-align: center;'>OFFICECOM</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; font-size: 0.8rem;'>Business Creating Business</p>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center;'>SUPORTE N2</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; font-size: 0.8rem;'>Parceiro Logístico: Cactus</p>", unsafe_allow_html=True)
     if st.button("🚪 LOGOUT"):
         st.session_state.authenticated = False
         st.rerun()
     st.markdown("---")
     if st.button("🔄 ATUALIZAR DADOS"):
         st.cache_data.clear()
-        st.toast("Dados sincronizados!", icon="✅")
         st.rerun()
     st.markdown("---")
     st.subheader("Filtros")
     df_raw = load_data()
     if not df_raw.empty:
         status_list = ['Todos'] + sorted(df_raw['Status'].unique().tolist())
-        selected_status = st.selectbox("Status", status_list)
+        selected_status = st.selectbox("Status do Ticket", status_list)
         casa_list = ['Todas'] + sorted(df_raw['Casas'].str.split(', ').explode().unique().tolist())
-        selected_casa = st.selectbox("Casa/Operadora", casa_list)
+        selected_casa = st.selectbox("Casa/Cliente", casa_list)
 
 if 'filtros' not in st.session_state:
     st.session_state.filtros = {'Status': None, 'Casas': None}
@@ -117,7 +97,9 @@ if not df_raw.empty:
     if st.session_state.filtros['Casas']: df = df[df['Casas'].str.contains(st.session_state.filtros['Casas'], na=False)]
 
     # --- MÉTRICAS ---
-    st.title("🛡️ Dashboard de Suporte N2")
+    st.title("🛡️ Suporte Dashboard")
+    st.markdown(f"Interface de monitoramento de tickets enviados para **Cactus**.")
+    
     m1, m2, m3, m4 = st.columns(4)
     with m1: st.metric("Total de Tickets", len(df))
     with m2: 
@@ -133,7 +115,7 @@ if not df_raw.empty:
     # --- GRÁFICOS ---
     c1, c2 = st.columns([1, 1])
     with c1:
-        st.subheader("Distribuição por Status")
+        st.subheader("Situação dos Chamados")
         status_counts = df['Status'].value_counts().reset_index()
         status_counts.columns = ['Status', 'Quantidade']
         fig_status = px.pie(status_counts, values='Quantidade', names='Status', hole=.4, color_discrete_sequence=['#EA465E', '#20435C', '#6C757D', '#ADB5BD'])
@@ -157,11 +139,11 @@ if not df_raw.empty:
 
     # --- TABELA ---
     st.markdown("---")
-    st.subheader("📋 Lista de Tickets")
+    st.subheader("📋 Detalhamento")
     df_display = df.copy()
-    df_display['Link'] = df_display['Link'].apply(lambda x: f'<a href="{x}" target="_blank" style="color: #EA465E; font-weight: bold;">Abrir</a>')
+    df_display['Link'] = df_display['Link'].apply(lambda x: f'<a href="{x}" target="_blank" style="color: #EA465E; font-weight: bold;">Ver Ticket</a>')
     st.write(df_display[['ID', 'Criacao', 'Solicitante', 'Status', 'Casas', 'Titulo', 'Link']].to_html(escape=False, index=False), unsafe_allow_html=True)
 
-    st.markdown("<br><p style='text-align: center; color: #888;'>© 2026 Officecom | Powered by Konig Systems</p>", unsafe_allow_html=True)
+    st.markdown("<br><p style='text-align: center; color: #888;'>Suporte Dashboard | Conexão Cactus Ativa</p>", unsafe_allow_html=True)
 else:
     st.error("Sem dados para exibir.")
