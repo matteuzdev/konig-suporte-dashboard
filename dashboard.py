@@ -1,12 +1,12 @@
-import streamlit as st
+﻿import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 
-# Configuração da Página - Suporte Dashboard
+# ConfiguraÃ§Ã£o da PÃ¡gina - Suporte Dashboard
 st.set_page_config(page_title="Suporte Dashboard", layout="wide", initial_sidebar_state="expanded")
 
-# --- SISTEMA DE SEGURANÇA ---
+# --- SISTEMA DE SEGURANÃ‡A ---
 def check_password():
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
@@ -16,20 +16,20 @@ def check_password():
     cols = st.columns([1, 2, 1])
     with cols[1]:
         st.markdown("<h1 style='text-align: center; color: #20435C;'>SUPORTE N2</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #666;'>Painel de Gestão de Tickets</p>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #666;'>Painel de GestÃ£o de Tickets</p>", unsafe_allow_html=True)
         password = st.text_input("Senha de acesso:", type="password")
         if st.button("ENTRAR NO SISTEMA"):
             if password == "suporten2":
                 st.session_state.authenticated = True
                 st.rerun()
             else:
-                st.error("❌ Senha incorreta.")
+                st.error("âŒ Senha incorreta.")
     return False
 
 if not check_password():
     st.stop()
 
-# --- CONFIGURAÇÕES ---
+# --- CONFIGURAÃ‡Ã•ES ---
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1LWuWM2iEPz-3f3qvXaaokiNrnLafjPP43LIAKz5tcoA/export?format=csv&gid=1321610989"
 
 # CSS Customizado (Paleta Officecom preservada)
@@ -37,6 +37,12 @@ st.markdown("""
     <style>
     .main { background-color: #F4F7F9; }
     .stMetric { background-color: white; padding: 20px; border-radius: 12px; border: 1px solid #E0E4E8; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+    [data-testid="stMetricLabel"] {
+        background-color: #F4F7F9 !important;
+        border-radius: 6px !important;
+        padding: 4px 8px !important;
+    }
+    [data-testid="stMetricLabel"] p { color: #20435C !important; font-weight: 700 !important; }
     [data-testid="stMetricValue"] { color: #20435C !important; font-weight: bold; }
     [data-testid="stSidebar"] { background-color: #20435C; border-right: 1px solid #1a364a; }
     [data-testid="stSidebar"] * { color: white !important; }
@@ -50,7 +56,7 @@ st.markdown("""
         padding: 10px !important;
     }
     .stButton>button:hover { background-color: #d63f56 !important; }
-    th { background-color: #20435C !important; color: white !important; }
+    th { background-color: #20435C !important; color: white !important; text-align: center !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -69,12 +75,11 @@ def load_data():
 # --- SIDEBAR ---
 with st.sidebar:
     st.markdown("<h2 style='text-align: center;'>SUPORTE N2</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; font-size: 0.8rem;'>Parceiro Logístico: Cactus</p>", unsafe_allow_html=True)
-    if st.button("🚪 LOGOUT"):
+    if st.button("ðŸšª LOGOUT"):
         st.session_state.authenticated = False
         st.rerun()
     st.markdown("---")
-    if st.button("🔄 ATUALIZAR DADOS"):
+    if st.button("ðŸ”„ ATUALIZAR DADOS"):
         st.cache_data.clear()
         st.rerun()
     st.markdown("---")
@@ -84,7 +89,7 @@ with st.sidebar:
         status_list = ['Todos'] + sorted(df_raw['Status'].unique().tolist())
         selected_status = st.selectbox("Status do Ticket", status_list)
         casa_list = ['Todas'] + sorted(df_raw['Casas'].str.split(', ').explode().unique().tolist())
-        selected_casa = st.selectbox("Casa/Cliente", casa_list)
+        selected_casa = st.selectbox("Brands", casa_list)
 
 if 'filtros' not in st.session_state:
     st.session_state.filtros = {'Status': None, 'Casas': None}
@@ -96,8 +101,8 @@ if not df_raw.empty:
     if st.session_state.filtros['Status']: df = df[df['Status'] == st.session_state.filtros['Status']]
     if st.session_state.filtros['Casas']: df = df[df['Casas'].str.contains(st.session_state.filtros['Casas'], na=False)]
 
-    # --- MÉTRICAS ---
-    st.title("🛡️ Suporte Dashboard")
+    # --- MÃ‰TRICAS ---
+    st.title("ðŸ›¡ï¸ Suporte Dashboard")
     st.markdown(f"Interface de monitoramento de tickets enviados para **Cactus**.")
     
     m1, m2, m3, m4 = st.columns(4)
@@ -112,10 +117,10 @@ if not df_raw.empty:
 
     st.markdown("---")
 
-    # --- GRÁFICOS ---
+    # --- GRÃFICOS ---
     c1, c2 = st.columns([1, 1])
     with c1:
-        st.subheader("Situação dos Chamados")
+        st.subheader("SituaÃ§Ã£o dos Chamados")
         status_counts = df['Status'].value_counts().reset_index()
         status_counts.columns = ['Status', 'Quantidade']
         fig_status = px.pie(status_counts, values='Quantidade', names='Status', hole=.4, color_discrete_sequence=['#EA465E', '#20435C', '#6C757D', '#ADB5BD'])
@@ -126,11 +131,11 @@ if not df_raw.empty:
             st.rerun()
 
     with c2:
-        st.subheader("Tickets por Casa")
+        st.subheader("Tickets por Brand")
         df_casas = df.assign(Casas=df['Casas'].str.split(', ')).explode('Casas')
         casa_counts = df_casas['Casas'].value_counts().reset_index().head(10)
-        casa_counts.columns = ['Casa', 'Tickets']
-        fig_casas = px.bar(casa_counts, x='Tickets', y='Casa', orientation='h', color_discrete_sequence=['#20435C'])
+        casa_counts.columns = ['Brand', 'Tickets']
+        fig_casas = px.bar(casa_counts, x='Tickets', y='Brand', orientation='h', color_discrete_sequence=['#20435C'])
         fig_casas.update_layout(margin=dict(t=30, b=0, l=0, r=0))
         sel_casa = st.plotly_chart(fig_casas, use_container_width=True, on_select="rerun")
         if sel_casa and 'selection' in sel_casa and sel_casa['selection']['points']:
@@ -139,11 +144,13 @@ if not df_raw.empty:
 
     # --- TABELA ---
     st.markdown("---")
-    st.subheader("📋 Detalhamento")
+    st.subheader("ðŸ“‹ Detalhamento")
     df_display = df.copy()
     df_display['Link'] = df_display['Link'].apply(lambda x: f'<a href="{x}" target="_blank" style="color: #EA465E; font-weight: bold;">Ver Ticket</a>')
-    st.write(df_display[['ID', 'Criacao', 'Solicitante', 'Status', 'Casas', 'Titulo', 'Link']].to_html(escape=False, index=False), unsafe_allow_html=True)
+    df_display = df_display.rename(columns={'Casas': 'Brands'})
+    st.write(df_display[['ID', 'Criacao', 'Solicitante', 'Status', 'Brands', 'Titulo', 'Link']].to_html(escape=False, index=False), unsafe_allow_html=True)
 
-    st.markdown("<br><p style='text-align: center; color: #888;'>Suporte Dashboard | Conexão Cactus Ativa</p>", unsafe_allow_html=True)
+    st.markdown("<br><p style='text-align: center; color: #888;'>Suporte Dashboard | ConexÃ£o Cactus Ativa</p>", unsafe_allow_html=True)
 else:
     st.error("Sem dados para exibir.")
+
