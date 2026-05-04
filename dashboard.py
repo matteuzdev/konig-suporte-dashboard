@@ -109,13 +109,33 @@ with st.sidebar:
         selected_casa = st.selectbox("Brands", casa_list)
         period_options = ["Todo período", "Últimos 7 dias", "Últimos 15 dias", "Últimos 30 dias", "Últimos 90 dias"]
         selected_period = st.selectbox("Período", period_options)
+        use_custom_period = st.checkbox("Filtrar período personalizado")
+        if use_custom_period:
+            min_date = df_raw["Criacao"].dropna().min()
+            max_date = df_raw["Criacao"].dropna().max()
+            if pd.notna(min_date) and pd.notna(max_date):
+                custom_start, custom_end = st.date_input(
+                    "Intervalo de datas",
+                    value=(min_date.date(), max_date.date()),
+                    min_value=min_date.date(),
+                    max_value=max_date.date(),
+                    format="DD/MM/YYYY",
+                )
+            else:
+                custom_start, custom_end = None, None
+        else:
+            custom_start, custom_end = None, None
 
 if "filtros" not in st.session_state:
     st.session_state.filtros = {"Status": None, "Casas": None}
 
 if not df_raw.empty:
     df = df_raw.copy()
-    if selected_period != "Todo período":
+    if custom_start is not None and custom_end is not None:
+        start_ts = pd.Timestamp(custom_start)
+        end_ts = pd.Timestamp(custom_end) + pd.Timedelta(days=1) - pd.Timedelta(seconds=1)
+        df = df[(df["Criacao"] >= start_ts) & (df["Criacao"] <= end_ts)]
+    elif selected_period != "Todo período":
         days_map = {
             "Últimos 7 dias": 7,
             "Últimos 15 dias": 15,
