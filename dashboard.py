@@ -71,9 +71,17 @@ st.markdown(
 def load_data():
     try:
         df = pd.read_csv(SHEET_URL, encoding="utf-8")
-        df.columns = ["ID", "Titulo", "Solicitante", "Criacao", "Status", "Casas", "Atualizacao", "Leitura", "Mesclado", "Link"]
+        expected = ["ID", "Titulo", "Solicitante", "Criacao", "Status", "Casas", "Atualizacao", "Leitura", "Mesclado", "Link"]
+        if len(df.columns) >= len(expected):
+            df.columns = expected + list(df.columns[len(expected):])
+
+        for col in ["Status", "Casas", "Criacao", "Link", "Titulo", "Solicitante", "ID"]:
+            if col not in df.columns:
+                df[col] = ""
+
         df["Criacao"] = pd.to_datetime(df["Criacao"], format="%d/%m/%Y", errors="coerce")
         df["Status"] = df["Status"].fillna("Sem Status")
+        df["Casas"] = df["Casas"].fillna("Sem brand")
         return df
     except Exception as e:
         st.error(f"Erro ao carregar dados: {e}")
@@ -148,10 +156,7 @@ if not df_raw.empty:
             margin=dict(t=30, b=0, l=0, r=0),
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         )
-        sel_status = st.plotly_chart(fig_status, use_container_width=True, on_select="rerun")
-        if sel_status and "selection" in sel_status and sel_status["selection"]["points"]:
-            st.session_state.filtros["Status"] = sel_status["selection"]["points"][0]["label"]
-            st.rerun()
+        st.plotly_chart(fig_status, use_container_width=True)
 
     with c2:
         st.subheader("Tickets por Brand")
@@ -160,10 +165,7 @@ if not df_raw.empty:
         casa_counts.columns = ["Brand", "Tickets"]
         fig_casas = px.bar(casa_counts, x="Tickets", y="Brand", orientation="h", color_discrete_sequence=["#20435C"])
         fig_casas.update_layout(margin=dict(t=30, b=0, l=0, r=0))
-        sel_casa = st.plotly_chart(fig_casas, use_container_width=True, on_select="rerun")
-        if sel_casa and "selection" in sel_casa and sel_casa["selection"]["points"]:
-            st.session_state.filtros["Casas"] = sel_casa["selection"]["points"][0]["y"]
-            st.rerun()
+        st.plotly_chart(fig_casas, use_container_width=True)
 
     # --- TABELA ---
     st.markdown("---")
