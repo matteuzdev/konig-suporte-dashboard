@@ -107,12 +107,25 @@ with st.sidebar:
         selected_status = st.selectbox("Status do Ticket", status_list)
         casa_list = ["Todas"] + sorted(df_raw["Casas"].str.split(", ").explode().unique().tolist())
         selected_casa = st.selectbox("Brands", casa_list)
+        period_options = ["Todo período", "Últimos 7 dias", "Últimos 15 dias", "Últimos 30 dias", "Últimos 90 dias"]
+        selected_period = st.selectbox("Período", period_options)
 
 if "filtros" not in st.session_state:
     st.session_state.filtros = {"Status": None, "Casas": None}
 
 if not df_raw.empty:
     df = df_raw.copy()
+    if selected_period != "Todo período":
+        days_map = {
+            "Últimos 7 dias": 7,
+            "Últimos 15 dias": 15,
+            "Últimos 30 dias": 30,
+            "Últimos 90 dias": 90,
+        }
+        days = days_map.get(selected_period, 0)
+        if days > 0:
+            cutoff = pd.Timestamp.now().normalize() - pd.Timedelta(days=days)
+            df = df[df["Criacao"] >= cutoff]
     if selected_status != "Todos":
         df = df[df["Status"] == selected_status]
     if selected_casa != "Todas":
