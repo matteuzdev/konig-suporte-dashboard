@@ -1,5 +1,6 @@
-.streamlit/
+﻿.streamlit/
 __pycache__/
 *.pyc
 .env
 dashboard_data.csv
+
